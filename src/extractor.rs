@@ -2,7 +2,6 @@ use crate::structer::{GeonodeProxy, GeonodeProxyData, Proxy};
 use base64::{engine::general_purpose, Engine as _};
 use scraper::{Html, Selector};
 use serde_json;
-use std::vec;
 use std::{error::Error, str};
 
 pub struct Extractor;
@@ -107,13 +106,10 @@ impl Extractor {
                     .unwrap_or_default();
                 let last_checked = format_time_advanced(&last_checked_raw);
 
-                if let Some(debug_msg) = debug {
-                    println!("{}", debug_msg);
-                }
-                println!(
+                /*println!(
                     "[DEBUG] Итог -> IP: {}, Port: {}, Type: [{}], Country: {}, Checked: {}",
                     ip, port, proxy_type, country, last_checked
-                );
+                );*/
 
                 proxies.push(Proxy {
                     ip,
@@ -126,6 +122,9 @@ impl Extractor {
                     live: false,
                 });
             }
+        }
+        if let Some(debug_msg) = debug {
+            println!("{}", debug_msg);
         }
         Ok(proxies)
     }

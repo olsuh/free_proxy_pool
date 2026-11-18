@@ -16,6 +16,19 @@ pub fn proxy_scheme(proxy_types: &str, force_https: bool) -> String {
     };
     proxy_scheme.to_string()
 }
+
+use tokio::net::TcpStream;
+use tokio::time::timeout;
+
+pub async fn has_internet_connection_async() -> bool {
+    let timeout_duration = Duration::from_secs(2);
+
+    match timeout(timeout_duration, TcpStream::connect("1.1.1.1:53")).await {
+        Ok(Ok(_stream)) => true, // Соединение установлено успешно
+        _ => false,              // Таймаут или ошибка сети
+    }
+}
+
 pub async fn check_proxy_alive(proxy: &Proxy) -> bool {
     let proxy_type = proxy_scheme(&proxy.proxy_type, false);
     let proxy_url = format!("{}://{}:{}", proxy_type, proxy.ip, proxy.port);
@@ -26,7 +39,10 @@ pub async fn check_proxy_alive(proxy: &Proxy) -> bool {
         .danger_accept_invalid_certs(true)
         .build()
         .unwrap();
-
+    while !has_internet_connection_async().await {
+        println!("No internet connection, retrying in 5 seconds...");
+        tokio::time::sleep(Duration::from_secs(5)).await;
+    }
     let test_url = "https://httpbin.org/ip";
     match client
         .get(test_url)
