@@ -1,8 +1,7 @@
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
-use std::hash::Hash;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug,Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Proxy {
     pub ip: String,
     pub port: String,
@@ -11,9 +10,10 @@ pub struct Proxy {
     pub last_checked: String,
     pub check_number: u64,
     pub live_number: u64,
-    pub live: bool
+    pub live: bool,
 }
 
+/*
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CheckerProxy {
     pub id: u64,
@@ -39,8 +39,7 @@ pub struct CheckerProxy {
     pub skip: bool,
     pub from_cache: bool,
 }
-
-
+*/
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GeonodeProxy {
@@ -84,4 +83,3 @@ pub struct GeonodeProxyData {
     pub page: u64,
     pub limit: u64,
 }
-

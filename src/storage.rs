@@ -1,6 +1,6 @@
-use std::error::Error;
 use crate::structer::Proxy;
 use rusqlite::{params, Connection, Result};
+use std::error::Error;
 
 pub fn initialize_db() -> Result<(), Box<dyn Error>> {
     let conn = Connection::open("proxies.db")?;
@@ -42,27 +42,38 @@ pub fn store_proxies(proxies: Vec<Proxy>) -> Result<(), Box<dyn Error>> {
         )?;
 
         for proxy in proxies.iter() {
-            let updated = update_stmt.execute(params![proxy.last_checked, proxy.live, proxy.live_number, proxy.ip, proxy.port])?;
+            let updated = update_stmt.execute(params![
+                proxy.last_checked,
+                proxy.live,
+                proxy.live_number as i64,
+                proxy.ip,
+                proxy.port
+            ])?;
 
             if updated == 0 {
-                insert_stmt.execute(params![proxy.ip, proxy.port, proxy.proxy_type, proxy.country, proxy.last_checked, proxy.check_number, proxy.live_number, proxy.live])?;
+                insert_stmt.execute(params![
+                    proxy.ip,
+                    proxy.port,
+                    proxy.proxy_type,
+                    proxy.country,
+                    proxy.last_checked,
+                    proxy.check_number as i64,
+                    proxy.live_number as i64,
+                    proxy.live
+                ])?;
             }
         }
-    } 
-
+    }
 
     tx.commit()?;
 
     Ok(())
 }
 
-pub fn live_proxies_db_update() -> Result<usize,Box<dyn Error>> {
+pub fn live_proxies_db_update() -> Result<usize, Box<dyn Error>> {
     let conn = Connection::open("proxies.db")?;
 
-    let cnt = conn.execute(
-        "DELETE FROM live_proxies;",
-        [],
-    )?; 
+    let cnt = conn.execute("DELETE FROM live_proxies;", [])?;
     println!("DELETE FROM live_proxies {cnt}");
     let cnt = conn.execute(
         "
@@ -72,14 +83,13 @@ pub fn live_proxies_db_update() -> Result<usize,Box<dyn Error>> {
         [],
     )?;
     println!("INSERT INTO live_proxies - {cnt}");
-    
+
     /*let mut stmt = conn.prepare(
         "
         SELECT Count(*) FROM live_proxies;"
     )?;
     let cnt = stmt.query([])?.next()?.unwrap().get(0)?;
     println!("SELECT * FROM live_proxies - {cnt}");*/
-
 
     Ok(cnt)
 }
@@ -94,8 +104,8 @@ pub fn fetch_all_proxies() -> Result<Vec<Proxy>, Box<dyn Error>> {
             proxy_type: row.get(3)?,
             country: row.get(4)?,
             last_checked: row.get(5)?,
-            check_number: row.get(6)?,
-            live_number: row.get(7)?,
+            check_number: (row.get::<usize, i64>(6)? as u64),
+            live_number: (row.get::<usize, i64>(7)? as u64),
             live: row.get(8)?,
         })
     })?;

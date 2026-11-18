@@ -1,6 +1,6 @@
 [package]
 name = "proxise_me"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -9,15 +9,22 @@ edition = "2021"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 #serde_with = "3.7.0"
-reqwest = { version = "0.12", features = ["json", "socks", "native-tls"] }
+reqwest = { version = "0.13", features = ["json", "socks", "native-tls"] }
 tokio = { version = "1", features = ["full"] }
 tokio-retry = "0.3.0"
-scraper = "0.21"
-base64 = "0.22"
+scraper = "0.29"
+base64 = "0.23"
 chrono = { version = "0.4", features = ["serde"] }
 #regex = "1.10.4"
 futures = "0.3"
-rusqlite = { version = "0.32", features = ["bundled"] }
+rusqlite = { version = "0.43", features = ["bundled"] }
 async-recursion = "1.1.0"
 #md5 = "0.7.0"
-hashbrown = "0.15"
+hashbrown = "0.17"
+
+[profile.release]
+strip = true
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"

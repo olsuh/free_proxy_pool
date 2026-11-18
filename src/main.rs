@@ -1,24 +1,23 @@
-use std::error::Error;
 use crate::storage::initialize_db;
-use scheduler::all_enginer_running;
-use tokio::time::{sleep, Duration};
 use async_recursion::async_recursion;
+use scheduler::all_enginer_running;
+use std::error::Error;
+use tokio::time::{sleep, Duration};
 
-/**
- page => 
-    https://advanced.name/freeproxy?page=1
-    https://github.com/TheSpeedX/PROXY-List
- */
-mod spider;
-mod structer;
 mod extractor;
 mod scheduler;
-mod validator;
+/**
+page =>
+   https://advanced.name/freeproxy?page=1
+   https://github.com/TheSpeedX/PROXY-List
+*/
+mod spider;
 mod storage;
-
+mod structer;
+mod validator;
 
 #[async_recursion]
-async fn run_periodically() -> Result<(),Box<dyn Error>> {
+async fn run_periodically() -> Result<(), Box<dyn Error>> {
     // 运行任务
     match all_enginer_running().await {
         Ok(_) => println!("Task completed successfully. wait 10 minutes"),
@@ -32,5 +31,4 @@ async fn run_periodically() -> Result<(),Box<dyn Error>> {
 async fn main() -> Result<(), Box<dyn Error>> {
     initialize_db()?;
     run_periodically().await
-
 }
