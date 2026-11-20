@@ -1410,6 +1410,7 @@ dependencies = [
  "hashbrown",
  "reqwest",
  "rusqlite",
+ "rustc-hash",
  "scraper",
  "serde",
  "serde_json",
