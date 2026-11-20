@@ -84,36 +84,26 @@ pub fn live_proxies_db_update() -> Result<usize, Box<dyn Error>> {
     )?;
     println!("INSERT INTO live_proxies - {cnt}");
 
-    /*let mut stmt = conn.prepare(
-        "
-        SELECT Count(*) FROM live_proxies;"
-    )?;
-    let cnt = stmt.query([])?.next()?.unwrap().get(0)?;
-    println!("SELECT * FROM live_proxies - {cnt}");*/
-
     Ok(cnt)
 }
 
 pub fn fetch_all_proxies() -> Result<Vec<Proxy>, Box<dyn Error>> {
     let conn = Connection::open("proxies.db")?;
     let mut stmt = conn.prepare("SELECT id, ip, port, proxy_type, country, last_checked, check_number, live_number, live FROM all_proxies")?;
-    let proxy_iter = stmt.query_map(params![], |row| {
-        Ok(Proxy {
-            ip: row.get(1)?,
-            port: row.get(2)?,
-            proxy_type: row.get(3)?,
-            country: row.get(4)?,
-            last_checked: row.get(5)?,
-            check_number: (row.get::<usize, i64>(6)? as u64),
-            live_number: (row.get::<usize, i64>(7)? as u64),
-            live: row.get(8)?,
-        })
-    })?;
-
-    let mut proxies = Vec::new();
-    for proxy in proxy_iter {
-        proxies.push(proxy?);
-    }
+    let proxies = stmt
+        .query_map(params![], |row| {
+            Ok(Proxy {
+                ip: row.get(1)?,
+                port: row.get(2)?,
+                proxy_type: row.get(3)?,
+                country: row.get(4)?,
+                last_checked: row.get(5)?,
+                check_number: (row.get::<usize, i64>(6)? as u64),
+                live_number: (row.get::<usize, i64>(7)? as u64),
+                live: row.get(8)?,
+            })
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
 
     Ok(proxies)
 }

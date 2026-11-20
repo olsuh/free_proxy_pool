@@ -3,6 +3,7 @@ use crate::structer::Proxy;
 use chrono::Utc;
 use futures::stream::{self, StreamExt};
 use reqwest::Client;
+use std::sync::OnceLock;
 use std::time::Duration;
 
 pub fn proxy_scheme(proxy_types: &str, force_https: bool) -> String {
@@ -29,6 +30,8 @@ pub async fn has_internet_connection_async() -> bool {
     }
 }
 
+pub static TEST_URL: OnceLock<String> = OnceLock::new();
+
 pub async fn check_proxy_alive(proxy: &Proxy) -> bool {
     let proxy_type = proxy_scheme(&proxy.proxy_type, false);
     let proxy_url = format!("{}://{}:{}", proxy_type, proxy.ip, proxy.port);
@@ -40,10 +43,13 @@ pub async fn check_proxy_alive(proxy: &Proxy) -> bool {
         .build()
         .unwrap();
     while !has_internet_connection_async().await {
-        println!("No internet connection, retrying in 5 seconds...");
+        //println!("No internet connection, retrying in 5 seconds...");
+        //print!(".");
         tokio::time::sleep(Duration::from_secs(5)).await;
     }
-    let test_url = "https://httpbin.org/ip";
+    let test_url = TEST_URL.get_or_init(|| "https://httpbin.org/ip".into());
+    let is_test_url = test_url == "https://httpbin.org/ip";
+
     match client
         .get(test_url)
         .timeout(Duration::from_secs(10))
@@ -51,15 +57,26 @@ pub async fn check_proxy_alive(proxy: &Proxy) -> bool {
         .await
     {
         Ok(response) => {
-            let ret = response.status().is_success();
+            let mut ret = response.status().is_success();
             //let _status = response.status();
-            let body = match response.text().await {
+            let mut body = match response.text().await {
                 Ok(b) => b,
                 Err(_e) => return false,
             };
-            let ret = ret && body.contains(r#""origin": ""#);
+            if ret && is_test_url {
+                body = body.replace(" ", "").replace("\n", "");
+                let proxy_ip = format!(r#""origin":"{}""#, proxy.ip);
+                //ret = body.contains(&proxy_ip);
+                ret = body.contains(r#""origin": ""#);
+                dbg!(proxy_ip);
+            } else {
+                let body2 = body.trim_start();
+                body = body2[..std::cmp::min(12, body2.len())].to_owned();
+                //dbg!(ret, body);
+            }
+            //ret = body.contains(r#""origin": ""#);
             if ret {
-                print!("{proxy_url} {:?}", proxy);
+                print!("{proxy_url} {:?} {body}", proxy);
                 //print!(" body: {}", response.text().await.unwrap_or_default());
                 println!();
             }
@@ -72,13 +89,17 @@ pub async fn check_proxy_alive(proxy: &Proxy) -> bool {
     }
 }
 
-pub async fn process_proxies(proxies: Vec<Proxy>) -> Vec<Proxy> {
+// Стало (принимает Vec, HashSet, итераторы и т.д.):
+pub async fn process_proxies<I>(proxies: I) -> Vec<Proxy>
+where
+    I: IntoIterator<Item = Proxy>,
+{
     let check_futures = stream::iter(proxies.into_iter().map(|proxy| async move {
         let alive = check_proxy_alive(&proxy).await;
         let last_checked = if alive {
             Utc::now().format("%Y.%m.%d %H:%M:%S").to_string()
         } else {
-            proxy.last_checked.clone()
+            proxy.last_checked
         };
         Proxy {
             ip: proxy.ip,
@@ -92,7 +113,7 @@ pub async fn process_proxies(proxies: Vec<Proxy>) -> Vec<Proxy> {
         }
     }));
 
-    check_futures.buffered(100).collect().await
+    check_futures.buffer_unordered(100).collect().await
 }
 
 pub async fn store_checked_proxies(check_proxies: Vec<Proxy>) {

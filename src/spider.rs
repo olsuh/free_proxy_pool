@@ -27,7 +27,7 @@ impl Spider {
 async fn fetch_with_retry(client: &Client, url: &str) -> Result<String, Error> {
     //let url_md5 = format!("{:x}", md5::compute(url.as_bytes()));
     //println!("spider core downloader => {}",url_md5);
-    let strategy = FixedInterval::from_millis(1000).take(3); // 每2秒重试，最多重试3次
+    let strategy = FixedInterval::from_millis(2000).take(300); // Повторяйте попытку каждые 2 секунды, до 300 раз.
     let action = || async {
         let response = client.get(url).send().await?;
         response.text().await

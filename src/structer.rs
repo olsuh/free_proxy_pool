@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Proxy {
     pub ip: String,
     pub port: String,
@@ -10,6 +10,24 @@ pub struct Proxy {
     pub check_number: u64,
     pub live_number: u64,
     pub live: bool,
+}
+
+use std::hash::{Hash, Hasher};
+
+// 1. Сравниваем и хэшируем Proxy только по ip и port
+impl PartialEq for Proxy {
+    fn eq(&self, other: &Self) -> bool {
+        self.ip == other.ip && self.port == other.port
+    }
+}
+
+impl Eq for Proxy {}
+
+impl Hash for Proxy {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.ip.hash(state);
+        self.port.hash(state);
+    }
 }
 
 /*

@@ -12,7 +12,7 @@ impl Extractor {
     }
 
     pub fn extract_proxies_advanced(&self, html: &str) -> Result<Vec<Proxy>, Box<dyn Error>> {
-        let mut proxies: Vec<Proxy> = Vec::with_capacity(100);
+        let mut proxies: Vec<Proxy> = Vec::with_capacity(500);
         let mut debug: Option<&str> = None; // Для отладки можно установить Some("DEBUG") или None для отключения
         let document = Html::parse_document(html);
 
