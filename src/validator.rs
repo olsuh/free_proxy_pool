@@ -47,8 +47,9 @@ pub async fn check_proxy_alive(proxy: &Proxy) -> bool {
         //print!(".");
         tokio::time::sleep(Duration::from_secs(5)).await;
     }
-    let test_url = TEST_URL.get_or_init(|| "https://httpbin.org/ip".into());
-    let is_test_url = test_url == "https://httpbin.org/ip";
+    const TEST_URL0: &str = "https://httpbin.org/ip";
+    let test_url = TEST_URL.get_or_init(|| TEST_URL0.into());
+    let is_test_url = test_url == TEST_URL0;
 
     match client
         .get(test_url)
@@ -67,7 +68,7 @@ pub async fn check_proxy_alive(proxy: &Proxy) -> bool {
                 body = body.replace(" ", "").replace("\n", "");
                 let proxy_ip = format!(r#""origin":"{}""#, proxy.ip);
                 //ret = body.contains(&proxy_ip);
-                ret = body.contains(r#""origin": ""#);
+                ret = body.contains(r#""origin":""#);
                 dbg!(proxy_ip);
             } else {
                 let body2 = body.trim_start();
