@@ -86,8 +86,8 @@ pub fn live_proxies_db_update() -> Result<usize, Box<dyn Error>> {
 
     Ok(cnt)
 }
-
-pub fn fetch_all_proxies() -> Result<Vec<Proxy>, Box<dyn Error>> {
+use hashbrown::HashSet;
+pub fn fetch_all_proxies() -> Result<HashSet<Proxy>, Box<dyn Error>> {
     let conn = Connection::open("proxies.db")?;
     let mut stmt = conn.prepare("SELECT id, ip, port, proxy_type, country, last_checked, check_number, live_number, live FROM all_proxies")?;
     let proxies = stmt
@@ -103,7 +103,7 @@ pub fn fetch_all_proxies() -> Result<Vec<Proxy>, Box<dyn Error>> {
                 live: row.get(8)?,
             })
         })?
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Result<HashSet<_>, _>>()?;
 
     Ok(proxies)
 }

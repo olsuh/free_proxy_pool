@@ -64,7 +64,7 @@ pub async fn all_engine_running() -> Result<(), Box<dyn Error>> {
     println!("load new spider data => {}", new_proxies.len());
 
     // 2. Загружаем прокси из БД сразу в HashSet без клонирования строк
-    let mut proxy_set: HashSet<Proxy> = fetch_all_proxies()?.into_iter().collect();
+    let mut proxy_set: HashSet<Proxy> = fetch_all_proxies()?;
     println!("db proxies => {}", proxy_set.len());
 
     // 3. Сливаем данные: обновляем last_checked у существующих, добавляем новые
